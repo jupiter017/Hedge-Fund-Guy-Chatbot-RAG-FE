@@ -42,11 +42,6 @@ export default function Header({ onNewSession, showAdminLink = true }: HeaderPro
                 <span className="hidden sm:inline text-sm font-medium">New Session</span>
               </button>
             )}
-            
-            <div className="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
-              <Sparkles className="w-4 h-4 text-indigo-600" />
-              <span className="text-sm font-medium text-gray-700">AI Powered</span>
-            </div>
           </div>
         </div>
       </div>

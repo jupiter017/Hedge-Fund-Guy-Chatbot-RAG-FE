@@ -128,6 +128,19 @@ export const getAdminDashboard = async () => {
   return response.data
 }
 
+// Admin Settings
+export const getAdminSettings = async () => {
+  const response = await api.get('/api/admin/settings')
+  return response.data
+}
+
+export const updateAdminSettings = async (recipientEmail: string) => {
+  const response = await api.post('/api/admin/settings', {
+    recipient_email: recipientEmail
+  })
+  return response.data
+}
+
 // WebSocket connection
 export const createWebSocketConnection = (sessionId: string): WebSocket => {
   return new WebSocket(`${WS_BASE_URL}/ws/${sessionId}`)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import ChatInterface from './components/ChatInterface'
 import Header from './components/Header'
 import DataCollectionProgress from './components/DataCollectionProgress'
@@ -16,21 +16,35 @@ function App() {
   })
   const [isComplete, setIsComplete] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
+  const initializingRef = useRef<boolean>(false)
 
   useEffect(() => {
-    // Initialize session on component mount
-    initSession()
+    // Initialize session on component mount only
+    if (!initializingRef.current && !sessionId) {
+      initSession()
+    }
   }, [])
 
   const initSession = async () => {
+    // Prevent multiple simultaneous initializations
+    if (initializingRef.current) {
+      console.log('Session initialization already in progress')
+      return
+    }
+    
+    initializingRef.current = true
+    
     try {
       const session = await createSession()
       setSessionId(session.session_id)
       setSessionInfo(session)
       setLoading(false)
+      console.log('Session created:', session.session_id)
     } catch (error) {
       console.error('Failed to create session:', error)
       setLoading(false)
+    } finally {
+      initializingRef.current = false
     }
   }
 
@@ -42,9 +56,37 @@ function App() {
     setIsComplete(complete)
   }, [])
 
-  const handleNewSession = useCallback(() => {
-    // Reload the page to start a fresh session
-    window.location.reload()
+  const handleNewSession = useCallback(async () => {
+    // Prevent multiple simultaneous session creations
+    if (initializingRef.current) {
+      console.log('Session creation already in progress')
+      return
+    }
+    
+    initializingRef.current = true
+    
+    try {
+      setLoading(true)
+      console.log('Creating new session...')
+      // Create a new session
+      const session = await createSession()
+      setSessionId(session.session_id)
+      setSessionInfo(session)
+      // Reset data collection state
+      setDataCollected({
+        name: false,
+        email: false,
+        income: false,
+      })
+      setIsComplete(false)
+      setLoading(false)
+      console.log('New session created:', session.session_id)
+    } catch (error) {
+      console.error('Failed to create new session:', error)
+      setLoading(false)
+    } finally {
+      initializingRef.current = false
+    }
   }, [])
 
   if (loading) {
@@ -91,6 +133,7 @@ function App() {
           {/* Main Chat Area */}
           <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
             <ChatInterface
+              key={sessionId} // Force remount on new session
               sessionId={sessionId}
               onDataUpdate={handleDataUpdate}
               onComplete={handleComplete}

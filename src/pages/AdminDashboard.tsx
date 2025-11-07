@@ -11,9 +11,14 @@ import {
   Clock,
   BarChart3,
   RefreshCw,
-  X
+  X,
+  Settings,
+  Save,
+  AlertCircle,
+  ArrowLeft,
+  Home
 } from 'lucide-react'
-import { getAdminDashboard } from '../services/api'
+import { getAdminDashboard, getAdminSettings, updateAdminSettings } from '../services/api'
 
 interface DashboardData {
   statistics: {
@@ -52,7 +57,14 @@ interface DashboardData {
   }>
 }
 
-type TabType = 'overview' | 'sessions'
+interface AdminSettings {
+  recipient_email: string | null
+  email_notifications_enabled: boolean
+  auto_send_on_complete: boolean
+  is_configured: boolean
+}
+
+type TabType = 'overview' | 'sessions' | 'settings'
 
 const AdminDashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -61,9 +73,16 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [selectedSession, setSelectedSession] = useState<DashboardData['recent_sessions'][0] | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  
+  // Settings state
+  const [settings, setSettings] = useState<AdminSettings | null>(null)
+  const [recipientEmail, setRecipientEmail] = useState('')
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [settingsMessage, setSettingsMessage] = useState<{type: 'success' | 'error', text: string} | null>(null)
 
   useEffect(() => {
     fetchDashboardData()
+    fetchSettings()
     // Refresh every 30 seconds
     const interval = setInterval(fetchDashboardData, 30000)
     return () => clearInterval(interval)
@@ -80,6 +99,41 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false)
       setIsRefreshing(false)
+    }
+  }
+
+  const fetchSettings = async () => {
+    try {
+      const settingsData = await getAdminSettings()
+      setSettings(settingsData)
+      setRecipientEmail(settingsData.recipient_email || '')
+    } catch (err) {
+      console.error('Failed to load settings:', err)
+    }
+  }
+
+  const handleSaveSettings = async () => {
+    if (!recipientEmail || !recipientEmail.includes('@')) {
+      setSettingsMessage({ type: 'error', text: 'Please enter a valid email address' })
+      return
+    }
+
+    try {
+      setIsSavingSettings(true)
+      setSettingsMessage(null)
+      const updatedSettings = await updateAdminSettings(recipientEmail)
+      setSettings(updatedSettings)
+      setSettingsMessage({ type: 'success', text: 'Settings saved successfully!' })
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSettingsMessage(null), 3000)
+    } catch (err) {
+      setSettingsMessage({ 
+        type: 'error', 
+        text: err instanceof Error ? err.message : 'Failed to save settings' 
+      })
+    } finally {
+      setIsSavingSettings(false)
     }
   }
 
@@ -113,11 +167,25 @@ const AdminDashboard = () => {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Hedge Fund Chatbot Analytics & Monitoring
-              </p>
+            <div className="flex items-center space-x-4">
+              {/* Back to Chat Button */}
+              <a
+                href="/"
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200 group"
+                title="Back to Chat"
+              >
+                <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                <span className="text-sm font-medium">Back to Chat</span>
+              </a>
+              
+              <div className="border-l border-gray-300 h-8"></div>
+              
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  Hedge Fund Chatbot Analytics & Monitoring
+                </p>
+              </div>
             </div>
             <button
               onClick={fetchDashboardData}
@@ -158,6 +226,19 @@ const AdminDashboard = () => {
                 <div className="flex items-center space-x-2">
                   <Users className="w-4 h-4" />
                   <span>Data Collection & Sessions</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'settings'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Settings className="w-4 h-4" />
+                  <span>Settings</span>
                 </div>
               </button>
             </nav>
@@ -351,6 +432,107 @@ const AdminDashboard = () => {
                   </table>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="space-y-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="p-2 bg-indigo-50 rounded-lg">
+                  <Mail className="w-6 h-6 text-indigo-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Email Settings</h2>
+                  <p className="text-sm text-gray-500">Configure the recipient email address for notifications</p>
+                </div>
+              </div>
+
+              {settingsMessage && (
+                <div className={`mb-6 p-4 rounded-lg flex items-start space-x-3 ${
+                  settingsMessage.type === 'success' 
+                    ? 'bg-green-50 border border-green-200' 
+                    : 'bg-red-50 border border-red-200'
+                }`}>
+                  {settingsMessage.type === 'success' ? (
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  )}
+                  <p className={`text-sm font-medium ${
+                    settingsMessage.type === 'success' ? 'text-green-800' : 'text-red-800'
+                  }`}>
+                    {settingsMessage.text}
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="recipientEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                    Recipient Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="recipientEmail"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                    placeholder="admin@example.com"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    This email will receive notifications when users complete their data collection.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <div className="flex items-center space-x-2">
+                    {settings?.is_configured ? (
+                      <>
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <span className="text-sm text-green-600 font-medium">Email configured</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-5 h-5 text-amber-600" />
+                        <span className="text-sm text-amber-600 font-medium">Email not configured</span>
+                      </>
+                    )}
+                  </div>
+                  
+                  <button
+                    onClick={handleSaveSettings}
+                    disabled={isSavingSettings}
+                    className={`flex items-center space-x-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all ${
+                      isSavingSettings ? 'opacity-75 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{isSavingSettings ? 'Saving...' : 'Save Settings'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Settings Info */}
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">How it works</h3>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+                  <span>When a user completes data collection (name, email, income), an email notification is sent</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+                  <span>The notification includes all collected user information and conversation history</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <CheckCircle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+                  <span>You can view all sessions and their data in the "Data Collection & Sessions" tab</span>
+                </li>
+              </ul>
             </div>
           </div>
         )}
