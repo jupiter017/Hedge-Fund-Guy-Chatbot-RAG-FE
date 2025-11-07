@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  frontend-dev:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -9,17 +9,17 @@ services:
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      # Vite environment variables
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     volumes:
       # Mount source code for hot-reload
       - .:/app
       # Don't mount these
       - /app/node_modules
-    environment:
-      # Vite configuration
-      HOST: 0.0.0.0
-      PORT: 3000
-      # Backend URL for API proxy (update if needed)
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      - /app/dist
+    stdin_open: true
+    tty: true
     networks:
       - hedge_fund_dev_network
 

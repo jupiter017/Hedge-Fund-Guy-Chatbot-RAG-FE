@@ -5,25 +5,25 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Build output
+# Build outputs
 dist/
+dist-ssr/
 build/
 
-# Environment variables
+# Local env files
 .env
 .env.local
 .env.*.local
 
-# IDE
+# Editor directories and files
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# OS
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 .DS_Store
-Thumbs.db
 
 # Testing
 coverage/
@@ -31,11 +31,12 @@ coverage/
 
 # Misc
 *.log
-*.pid
-*.seed
-*.pid.lock
+.cache/
+.parcel-cache/
+.tmp/
+temp/
 
-# Documentation (keep README.md)
+# Documentation (keep README)
 *.md
 !README.md
 
@@ -45,7 +46,4 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
-
-# Vite
-.vite/
 

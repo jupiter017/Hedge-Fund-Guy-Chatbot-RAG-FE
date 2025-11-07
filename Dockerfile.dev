@@ -1,24 +1,24 @@
-# Development Dockerfile with hot-reload
-# This Dockerfile is optimized for local development with Vite HMR
+# Development Dockerfile for React + Vite with hot-reload
+# Use this for local development
 
 FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Install dependencies for better caching
-COPY package*.json ./
-RUN npm ci
+# Install dependencies first (for better caching)
+COPY package.json package-lock.json ./
+RUN npm ci --silent
 
-# Copy source code (will be overridden by volume mount)
+# Copy source code
 COPY . .
 
 # Expose Vite dev server port
 EXPOSE 3000
 
-# Set environment variable for Vite
-ENV HOST=0.0.0.0
+# Set environment to development
+ENV NODE_ENV=development
 
-# Start Vite dev server with hot-reload
+# Start development server with hot-reload
 CMD ["npm", "run", "dev"]
 
