@@ -2,14 +2,13 @@ import axios, { AxiosInstance } from 'axios'
 import type {
   SessionInfo,
   SessionData,
-  ChatMessage,
   ChatResponse,
   GreetingResponse,
   HealthCheck,
+  DataCollected,
 } from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000'
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -139,11 +138,6 @@ export const updateAdminSettings = async (recipientEmail: string) => {
     recipient_email: recipientEmail
   })
   return response.data
-}
-
-// WebSocket connection
-export const createWebSocketConnection = (sessionId: string): WebSocket => {
-  return new WebSocket(`${WS_BASE_URL}/ws/${sessionId}`)
 }
 
 export default api

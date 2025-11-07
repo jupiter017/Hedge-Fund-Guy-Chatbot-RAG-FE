@@ -3,12 +3,10 @@ import {
   Users, 
   MessageSquare, 
   CheckCircle, 
-  Activity, 
-  TrendingUp, 
+  Activity,
   Database,
   Mail,
   DollarSign,
-  Clock,
   BarChart3,
   RefreshCw,
   X,
@@ -16,7 +14,6 @@ import {
   Save,
   AlertCircle,
   ArrowLeft,
-  Home
 } from 'lucide-react'
 import { getAdminDashboard, getAdminSettings, updateAdminSettings } from '../services/api'
 

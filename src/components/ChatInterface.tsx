@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Send, Loader2 } from 'lucide-react'
 import Message from './Message'
 import Toast from './Toast'

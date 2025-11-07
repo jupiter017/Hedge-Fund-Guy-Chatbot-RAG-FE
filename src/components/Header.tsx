@@ -1,4 +1,4 @@
-import { TrendingUp, Sparkles, Plus, LayoutDashboard } from 'lucide-react'
+import { TrendingUp, Plus, LayoutDashboard } from 'lucide-react'
 
 interface HeaderProps {
   onNewSession?: () => void
